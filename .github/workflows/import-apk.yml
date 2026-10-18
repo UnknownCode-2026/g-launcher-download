@@ -5,7 +5,7 @@ on:
       source_run:
         description: 'Successful source workflow run ID'
         required: true
-        default: '39130225883'
+        default: '39132031850'
 permissions:
   contents: write
 jobs:
@@ -29,13 +29,13 @@ jobs:
           gh run download "$SOURCE_RUN" --repo UnknownCode-2026/g-launcher-mobile --name g-launcher-debug-apk --dir apk
           APK="$(find apk -type f -name '*.apk' -print -quit)"
           test -n "$APK"
-          cp "$APK" G-Launcher-Test-1.0.0.apk
+          cp "$APK" G-Launcher-Test-1.0.1.apk
       - name: Publish public GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view launcher-test-1.0.0 --repo "${{ github.repository }}" >/dev/null 2>&1; then
-            gh release upload launcher-test-1.0.0 G-Launcher-Test-1.0.0.apk --clobber --repo "${{ github.repository }}"
+          if gh release view launcher-test-1.0.1 --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload launcher-test-1.0.1 G-Launcher-Test-1.0.1.apk --clobber --repo "${{ github.repository }}"
           else
-            gh release create launcher-test-1.0.0 G-Launcher-Test-1.0.0.apk --repo "${{ github.repository }}" --title "G-Launcher Test 1.0.0" --notes "Debug APK for community testing; not a production-signed release." --prerelease
+            gh release create launcher-test-1.0.1 G-Launcher-Test-1.0.1.apk --repo "${{ github.repository }}" --title "G-Launcher Test 1.0.1" --notes "Debug APK for community testing; not a production-signed release." --prerelease
           fi
