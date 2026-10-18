@@ -1,0 +1,37 @@
+name: Publish game data ZIP
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'Successful Prepare game data ZIP run ID from private repo'
+        required: true
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Verify source token
+        env:
+          TOKEN: ${{ secrets.SOURCE_REPO_READ_TOKEN }}
+        run: test -n "$TOKEN"
+      - name: Fetch converted ZIP from private workflow
+        env:
+          GH_TOKEN: ${{ secrets.SOURCE_REPO_READ_TOKEN }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+        run: |
+          mkdir -p data
+          gh run download "$SOURCE_RUN" --repo UnknownCode-2026/g-launcher-mobile --name g-launcher-game-zip --dir data
+          test -s data/game.zip
+          unzip -tq data/game.zip
+          (cd data && sha256sum -c game.zip.sha256)
+      - name: Publish data release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view game-data-v1.0.0 --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload game-data-v1.0.0 data/game.zip data/game.zip.sha256 --clobber --repo "${{ github.repository }}"
+          else
+            gh release create game-data-v1.0.0 data/game.zip data/game.zip.sha256 --repo "${{ github.repository }}" --title "G-Launcher Game Data v1.0.0" --notes "Game data package for authorized distribution." 
+          fi
